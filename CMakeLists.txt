@@ -51,6 +51,7 @@ target_link_libraries(bootloader
 # Add the standard include files to the build
 target_include_directories(bootloader PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
+        include
 )
 
 pico_add_extra_outputs(bootloader)
