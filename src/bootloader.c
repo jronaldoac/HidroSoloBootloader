@@ -36,27 +36,24 @@ int main(void)
     printf("[INFO]   Factory FW: 0x%08X - 0x%08X\n", FLASH_ADDR_FACTORY_FW, FLASH_ADDR_FACTORY_FW + FIRMWARE_SIZE - 1);
     printf("[INFO]   Current FW: 0x%08X - 0x%08X\n", FLASH_ADDR_CURRENT_FW, FLASH_ADDR_CURRENT_FW + FIRMWARE_SIZE - 1);
     printf("[INFO]   Staging:    0x%08X - 0x%08X\n\n", FLASH_ADDR_STAGING_FW, FLASH_ADDR_STAGING_FW + FIRMWARE_SIZE - 1);
+    
     printf("[INFO] Bootloader inicializado com sucesso\n");
     
-
+    // Prioridade 1: Tentar firmware atual (principal)
+    printf("[INFO] Tentando saltar para firmware atual (0x%08X)\n", FLASH_ADDR_CURRENT_FW);
     bootloader_jump_to(FLASH_ADDR_CURRENT_FW);
-    printf("[INFO] Saltando para firmware atual (0x%08X)\n", FLASH_ADDR_CURRENT_FW);
-    // Se o firmware atual não estiver presente, salta para o firmware de fábrica
-    if (!bootloader_jump_to(FLASH_ADDR_CURRENT_FW))
-    {
-        printf("[ERRO] Firmware não encontrado ou inválido, tentando firmware de fábrica...\n");
-
-    }
-        
-    printf("[INFO] Saltando para firmware factory (temporário)\n");
+    
+    // Se chegou aqui, o firmware atual falhou
+    printf("[ERRO] Firmware atual falhou ou não encontrado\n");
+    
+    // Prioridade 2: Tentar firmware de fábrica (fallback)
+    printf("[INFO] Tentando firmware de fábrica (0x%08X)\n", FLASH_ADDR_FACTORY_FW);
     bootloader_jump_to(FLASH_ADDR_FACTORY_FW);
     
-    if(!bootloader_jump_to(FLASH_ADDR_FACTORY_FW))
-    {
-        // Se o firmware de fábrica também não estiver presente, entra em modo de recuperação
-        printf("[ERRO] Firmware de fábrica não ausente ou inválido, entrando em modo de recuperação...\n");
-        bootloader_recovery();
-    }
+    // Se chegou aqui, ambos falharam
+    printf("[ERRO] Ambos firmwares falharam\n");
+    printf("[INFO] Entrando em modo de recuperação...\n");
+    bootloader_recovery();
     
     return 0;
 }
