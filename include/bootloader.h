@@ -19,7 +19,6 @@
 #define FLAGS_SIZE              0x1000        // 4KB
 #define FIRMWARE_SIZE           0x80000       // 512KB cada área
 
-#define FLAGS_MAGIC_NUMBER      0xDEADBEEF
 #define HASH_SIZE              32             // SHA-256 hash size in bytes
 
 typedef enum {
@@ -30,7 +29,6 @@ typedef enum {
 } FirmwareStatus_t;
 
 typedef struct {
-    uint32_t magic; // Número mágico para validar a estrutura
     FirmwareStatus_t status; // Status do firmware
     uint16_t crc16; // CRC16 do firmware
     uint8_t sha256[HASH_SIZE]; // Hash SHA-256 do firmware

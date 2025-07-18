@@ -13,6 +13,13 @@
 #include "bootloader.h"
 #include <stdio.h>
 
+//#define DEBUG_PRINT
+
+#ifdef DEBUG_PRINT
+	#define DBG_PRINTF(...) printf(__VA_ARGS__)
+#else
+	#define DBG_PRINTF(...) do {} while(0)
+#endif
 #define BOOTLOADER_TIMEOUT_MS 5000
 
 int main(void) 
@@ -21,38 +28,38 @@ int main(void)
     stdio_init_all();
     sleep_ms(6000);
     //Print será colocado em diretivas de compilação
-    printf("\n=== BOOTLOADER RP2040 ===\n");
-    printf("Versão: 0.1.0\n");
+    DBG_PRINTF("\n=== BOOTLOADER RP2040 ===\n");
+    DBG_PRINTF("Versão: 0.1.0\n");
     // Inicialização básica
     if (!bootloader_init()) 
     {
-        printf("[ERRO] Falha na inicialização\n");
+        DBG_PRINTF("[ERRO] Falha na inicialização\n");
         bootloader_recovery();
     }
     //MApeamento de memória
-    printf("[INFO] Mapeamento de memória:\n");
-    printf("[INFO]   Bootloader: 0x%08X - 0x%08X\n", FLASH_ADDR_BOOTLOADER, FLASH_ADDR_BOOTLOADER + BOOTLOADER_SIZE - 1);
-    printf("[INFO]   Flags:      0x%08X - 0x%08X\n", FLASH_ADDR_FLAGS, FLASH_ADDR_FLAGS + FLAGS_SIZE - 1);
-    printf("[INFO]   Factory FW: 0x%08X - 0x%08X\n", FLASH_ADDR_FACTORY_FW, FLASH_ADDR_FACTORY_FW + FIRMWARE_SIZE - 1);
-    printf("[INFO]   Current FW: 0x%08X - 0x%08X\n", FLASH_ADDR_CURRENT_FW, FLASH_ADDR_CURRENT_FW + FIRMWARE_SIZE - 1);
-    printf("[INFO]   Staging:    0x%08X - 0x%08X\n\n", FLASH_ADDR_STAGING_FW, FLASH_ADDR_STAGING_FW + FIRMWARE_SIZE - 1);
+    DBG_PRINTF("[INFO] Mapeamento de memória:\n");
+    DBG_PRINTF("[INFO]   Bootloader: 0x%08X - 0x%08X\n", FLASH_ADDR_BOOTLOADER, FLASH_ADDR_BOOTLOADER + BOOTLOADER_SIZE - 1);
+    DBG_PRINTF("[INFO]   Flags:      0x%08X - 0x%08X\n", FLASH_ADDR_FLAGS, FLASH_ADDR_FLAGS + FLAGS_SIZE - 1);
+    DBG_PRINTF("[INFO]   Factory FW: 0x%08X - 0x%08X\n", FLASH_ADDR_FACTORY_FW, FLASH_ADDR_FACTORY_FW + FIRMWARE_SIZE - 1);
+    DBG_PRINTF("[INFO]   Current FW: 0x%08X - 0x%08X\n", FLASH_ADDR_CURRENT_FW, FLASH_ADDR_CURRENT_FW + FIRMWARE_SIZE - 1);
+    DBG_PRINTF("[INFO]   Staging:    0x%08X - 0x%08X\n\n", FLASH_ADDR_STAGING_FW, FLASH_ADDR_STAGING_FW + FIRMWARE_SIZE - 1);
     
-    printf("[INFO] Bootloader inicializado com sucesso\n");
+    DBG_PRINTF("[INFO] Bootloader inicializado com sucesso\n");
     
     // Prioridade 1: Tentar firmware atual (principal)
-    printf("[INFO] Tentando saltar para firmware atual (0x%08X)\n", FLASH_ADDR_CURRENT_FW);
+    DBG_PRINTF("[INFO] Saltando para firmware atual (0x%08X)\n", FLASH_ADDR_CURRENT_FW);
     bootloader_jump_to(FLASH_ADDR_CURRENT_FW);
     
     // Se chegou aqui, o firmware atual falhou
-    printf("[ERRO] Firmware atual falhou ou não encontrado\n");
+    DBG_PRINTF("[ERRO] Firmware atual falhou ou não encontrado\n");
     
     // Prioridade 2: Tentar firmware de fábrica (fallback)
-    printf("[INFO] Tentando firmware de fábrica (0x%08X)\n", FLASH_ADDR_FACTORY_FW);
+    DBG_PRINTF("[INFO] Tentando firmware de fábrica (0x%08X)\n", FLASH_ADDR_FACTORY_FW);
     bootloader_jump_to(FLASH_ADDR_FACTORY_FW);
     
     // Se chegou aqui, ambos falharam
-    printf("[ERRO] Ambos firmwares falharam\n");
-    printf("[INFO] Entrando em modo de recuperação...\n");
+    DBG_PRINTF("[ERRO] Ambos firmwares falharam\n");
+    DBG_PRINTF("[INFO] Entrando em modo de recuperação...\n");
     bootloader_recovery();
     
     return 0;
@@ -60,19 +67,19 @@ int main(void)
 
 bool bootloader_init(void) 
 {
-    printf("[INFO] Configurando watchdog...\n");
+    DBG_PRINTF("[INFO] Configurando watchdog...\n");
     watchdog_enable(BOOTLOADER_TIMEOUT_MS, 1);
     return true;
 }
 
 bool bootloader_jump_to(uint32_t fw_addr) 
 {
-    printf("[INFO] Preparando jump para 0x%08X\n", fw_addr);
+    DBG_PRINTF("[INFO] Preparando jump para 0x%08X\n", fw_addr);
     
     // Validação básica do endereço
     if (fw_addr < 0x10000000 || fw_addr >= 0x10200000) 
     {
-        printf("[ERRO] Endereço inválido: 0x%08X\n", fw_addr);
+        DBG_PRINTF("[ERRO] Endereço inválido: 0x%08X\n", fw_addr);
         return false;
     }
     
@@ -80,26 +87,26 @@ bool bootloader_jump_to(uint32_t fw_addr)
     uint32_t sp = vector_table[0];  // Stack pointer
     uint32_t pc = vector_table[1];  // Program counter
     
-    printf("[INFO] Stack Pointer: 0x%08X\n", sp);
-    printf("[INFO] Program Counter: 0x%08X\n", pc);
+    DBG_PRINTF("[INFO] Stack Pointer: 0x%08X\n", sp);
+    DBG_PRINTF("[INFO] Program Counter: 0x%08X\n", pc);
     
     // Validações ARM
     if (sp < 0x20000000 || sp > 0x20042000) 
     {
-        printf("[ERRO] Stack pointer inválido\n");
+        DBG_PRINTF("[ERRO] Stack pointer inválido\n");
         return false;
     }
     
     if ((pc & 1) == 0) 
     {
-        printf("[ERRO] Thumb bit não definido\n");
+        DBG_PRINTF("[ERRO] Thumb bit não definido\n");
         return false;
     }
     
-    printf("[INFO] Desabilitando watchdog e interrupções...\n");
+    DBG_PRINTF("[INFO] Desabilitando watchdog e interrupções...\n");
     watchdog_disable();
     
-    printf("[INFO] Executando jump...\n");
+    DBG_PRINTF("[INFO] Executando jump...\n");
     sleep_ms(100);
     
     // Configurar MSP e jump
@@ -113,13 +120,13 @@ bool bootloader_jump_to(uint32_t fw_addr)
 
 void bootloader_recovery(void) 
 {
-    printf("\n=== MODO RECOVERY ===\n");
-    printf("Sistema em loop de recuperação\n");
+    DBG_PRINTF("\n=== MODO RECOVERY ===\n");
+    DBG_PRINTF("Sistema em loop de recuperação\n");
     
     int counter = 0;
     while (1) 
     {
-        printf("Recovery mode - contador: %d\n", counter++);
+        DBG_PRINTF("Recovery mode - contador: %d\n", counter++);
         sleep_ms(2000);
     }
 }
