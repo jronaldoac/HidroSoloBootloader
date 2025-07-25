@@ -23,7 +23,7 @@ int main(void) {
     stdio_init_all();
     sleep_ms(2000);
     DBG_PRINTF("\n=== BOOTLOADER v2.2.1 (CRC16) INICIADO ===\n");
-    watchdog_enable(8000, 1);
+   // watchdog_enable(8000, 1);
 
     //Verifica se o firmware atual é válido
     DBG_PRINTF("[FLUXO] Verificando Novo FW em 0x%08X...\n", ADDR_NEW_FW);
@@ -126,7 +126,7 @@ void bootloader_jump_to_current_fw(void) {
 
 __attribute__((noreturn))
 void bootloader_enter_recovery(void) {
-    reset_usb_boot(0, 0);
+    //reset_usb_boot(0, 0);
     while(1);
 }
 
