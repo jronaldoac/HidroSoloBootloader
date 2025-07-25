@@ -46,7 +46,7 @@ pico_enable_stdio_usb(bootloader 1)
 
 # Add the standard library to the build
 target_link_libraries(bootloader
-        pico_stdlib)
+                      pico_stdlib)
 
 # Add the standard include files to the build
 target_include_directories(bootloader PRIVATE
