@@ -30,7 +30,7 @@
 typedef struct {
     uint32_t fw_size;       // Tamanho do payload do firmware em bytes.
     uint32_t fw_version;    // Versão do firmware (ex: 0x010200 para v1.2.0).
-    uint16_t fw_crc16;      // CRC-16 (CCITT-FALSE) do payload.
+    uint16_t fw_crc16;      // CRC-16 do payload.
     uint16_t reserved;      // Padding para alinhamento de 32 bits.
 } fw_header_t;
 
